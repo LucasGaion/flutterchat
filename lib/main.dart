@@ -76,7 +76,7 @@ class _ChatScreenChatGPTState extends State<ChatScreenChatGPT> {
   List<Map<String, String>> _messages = [];
   bool _isLoading = false;
 
-  final String _apiKeyChatGPT = '';
+  final String _apiKeyChatGPT = 'sk-proj-BIpNrxNk3JfCCwnGSEW9T3BlbkFJY38nQUUbGQzT3G07Waqi';
 
   Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
@@ -88,7 +88,7 @@ class _ChatScreenChatGPTState extends State<ChatScreenChatGPT> {
 
     String apiUrl = 'https://api.openai.com/v1/chat/completions';
     var body = jsonEncode({
-      'model': 'gpt-4',
+      'model': 'gpt-3.5-turbo',
       'messages': [
         {'role': 'user', 'content': message}
       ],
@@ -187,7 +187,7 @@ class _ChatScreenChatGPTState extends State<ChatScreenChatGPT> {
                 child: TextField(
                   controller: _controller,
                   decoration: InputDecoration(
-                    hintText: 'Faça seu pedido para o ChatGPT...',
+                    hintText: 'Faca seu pedido para o ChatGPT...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
@@ -210,23 +210,70 @@ class _ChatScreenChatGPTState extends State<ChatScreenChatGPT> {
 }
 
 class ChatScreenGemini extends StatefulWidget {
-  const ChatScreenGemini({super.key});
+  const ChatScreenGemini({Key? key}) : super(key: key);
 
   @override
   _ChatScreenGeminiState createState() => _ChatScreenGeminiState();
 }
 
 class _ChatScreenGeminiState extends State<ChatScreenGemini> {
-  final List<String> _messages = [];
   final TextEditingController _controller = TextEditingController();
+  List<Map<String, String>> _messages = [];
+  bool _isLoading = false;
 
-  void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
+  final String _apiKeyGemini = 'sk-proj-BIpNrxNk3JfCCwnGSEW9T3BlbkFJY38nQUUbGQzT3G07Waqi';
+
+  Future<void> _sendMessage(String message) async {
+    if (message.isEmpty) return;
+
+    setState(() {
+      _messages.add({'role': 'user', 'content': message});
+      _isLoading = true;
+    });
+
+    String apiUrl = 'https://api.openai.com/v1/chat/completions';
+    var body = jsonEncode({
+      'model': 'gpt-4o',
+      'messages': [
+        {'role': 'user', 'content': message}
+      ],
+      'max_tokens': 150,
+      'temperature': 0.7,
+    });
+
+    try {
+      var response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKeyGemini',
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _messages.add({
+            'role': 'bot',
+            'content': jsonDecode(response.body)['choices'][0]['message']
+                ['content']
+          });
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _messages.add({
+            'role': 'bot',
+            'content': 'Error fetching response: ${response.reasonPhrase}'
+          });
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _messages.add(_controller.text);
-        _controller.clear();
+        _messages.add({'role': 'bot', 'content': 'Network error: $e'});
+        _isLoading = false;
       });
-      // Aqui você pode adicionar a lógica para enviar a mensagem para a API do Google Gemini
     }
   }
 
@@ -248,10 +295,17 @@ class _ChatScreenGeminiState extends State<ChatScreenGemini> {
             child: ListView.builder(
               itemCount: _messages.length,
               itemBuilder: (context, index) {
+                final message = _messages[index];
+                final isUser = message['role'] == 'user';
+                final textColor = isUser ? Colors.black : Colors.white;
+                final backgroundColor =
+                    isUser ? Colors.transparent : Colors.grey;
                 return Align(
-                  alignment: Alignment.centerRight,
+                  alignment:
+                      isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     decoration: BoxDecoration(
+                      color: backgroundColor,
                       border: Border.all(
                         color: Colors.grey, // Cor da borda
                         width: 1.0, // Largura da borda
@@ -260,7 +314,10 @@ class _ChatScreenGeminiState extends State<ChatScreenGemini> {
                     ),
                     padding: const EdgeInsets.all(8.0),
                     margin: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Text(_messages[index]),
+                    child: Text(
+                      message['content']!,
+                      style: TextStyle(color: textColor),
+                    ),
                   ),
                 );
               },
@@ -275,7 +332,7 @@ class _ChatScreenGeminiState extends State<ChatScreenGemini> {
                 child: TextField(
                   controller: _controller,
                   decoration: InputDecoration(
-                    hintText: 'Pergunte o que quiser ao Google Gemini...',
+                    hintText: 'Diga o que quiser ao Gemini...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
@@ -284,7 +341,10 @@ class _ChatScreenGeminiState extends State<ChatScreenGemini> {
               ),
               IconButton(
                 icon: Icon(Icons.send),
-                onPressed: _sendMessage,
+                onPressed: () {
+                  _sendMessage(_controller.text);
+                  _controller.clear();
+                },
               ),
             ],
           ),
@@ -295,23 +355,70 @@ class _ChatScreenGeminiState extends State<ChatScreenGemini> {
 }
 
 class ChatScreenCopilot extends StatefulWidget {
-  const ChatScreenCopilot({super.key});
+  const ChatScreenCopilot({Key? key}) : super(key: key);
 
   @override
   _ChatScreenCopilotState createState() => _ChatScreenCopilotState();
 }
 
 class _ChatScreenCopilotState extends State<ChatScreenCopilot> {
-  final List<String> _messages = [];
   final TextEditingController _controller = TextEditingController();
+  List<Map<String, String>> _messages = [];
+  bool _isLoading = false;
 
-  void _sendMessage() {
-    if (_controller.text.isNotEmpty) {
+  final String _apiKeyCopilot = 'sk-proj-BIpNrxNk3JfCCwnGSEW9T3BlbkFJY38nQUUbGQzT3G07Waqi';
+
+  Future<void> _sendMessage(String message) async {
+    if (message.isEmpty) return;
+
+    setState(() {
+      _messages.add({'role': 'user', 'content': message});
+      _isLoading = true;
+    });
+
+    String apiUrl = 'https://api.openai.com/v1/chat/completions';
+    var body = jsonEncode({
+      'model': 'gpt-4',
+      'messages': [
+        {'role': 'user', 'content': message}
+      ],
+      'max_tokens': 150,
+      'temperature': 0.7,
+    });
+
+    try {
+      var response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKeyCopilot',
+        },
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _messages.add({
+            'role': 'bot',
+            'content': jsonDecode(response.body)['choices'][0]['message']
+                ['content']
+          });
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _messages.add({
+            'role': 'bot',
+            'content': 'Error fetching response: ${response.reasonPhrase}'
+          });
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _messages.add(_controller.text);
-        _controller.clear();
+        _messages.add({'role': 'bot', 'content': 'Network error: $e'});
+        _isLoading = false;
       });
-      // Aqui você pode adicionar a lógica para enviar a mensagem para a API do Microsoft Copilot
     }
   }
 
@@ -333,10 +440,17 @@ class _ChatScreenCopilotState extends State<ChatScreenCopilot> {
             child: ListView.builder(
               itemCount: _messages.length,
               itemBuilder: (context, index) {
+                final message = _messages[index];
+                final isUser = message['role'] == 'user';
+                final textColor = isUser ? Colors.black : Colors.white;
+                final backgroundColor =
+                    isUser ? Colors.transparent : Colors.grey;
                 return Align(
-                  alignment: Alignment.centerRight,
+                  alignment:
+                      isUser ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
                     decoration: BoxDecoration(
+                      color: backgroundColor,
                       border: Border.all(
                         color: Colors.grey, // Cor da borda
                         width: 1.0, // Largura da borda
@@ -345,7 +459,10 @@ class _ChatScreenCopilotState extends State<ChatScreenCopilot> {
                     ),
                     padding: const EdgeInsets.all(8.0),
                     margin: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Text(_messages[index]),
+                    child: Text(
+                      message['content']!,
+                      style: TextStyle(color: textColor),
+                    ),
                   ),
                 );
               },
@@ -360,7 +477,7 @@ class _ChatScreenCopilotState extends State<ChatScreenCopilot> {
                 child: TextField(
                   controller: _controller,
                   decoration: InputDecoration(
-                    hintText: 'Diga o que desejar ao Copilot...',
+                    hintText: 'Fale o que desejar para o Copilot...',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.0),
                     ),
@@ -369,7 +486,10 @@ class _ChatScreenCopilotState extends State<ChatScreenCopilot> {
               ),
               IconButton(
                 icon: Icon(Icons.send),
-                onPressed: _sendMessage,
+                onPressed: () {
+                  _sendMessage(_controller.text);
+                  _controller.clear();
+                },
               ),
             ],
           ),
