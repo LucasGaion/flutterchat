@@ -76,7 +76,7 @@ class _ChatScreenChatGPTState extends State<ChatScreenChatGPT> {
   List<Map<String, String>> _messages = [];
   bool _isLoading = false;
 
-  final String _apiKeyChatGPT = 'sk-proj-BIpNrxNk3JfCCwnGSEW9T3BlbkFJY38nQUUbGQzT3G07Waqi';
+  final String _apiKeyChatGPT = '';
 
   Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
@@ -222,7 +222,7 @@ class _ChatScreenGeminiState extends State<ChatScreenGemini> {
   List<Map<String, String>> _messages = [];
   bool _isLoading = false;
 
-  final String _apiKeyGemini = 'sk-proj-BIpNrxNk3JfCCwnGSEW9T3BlbkFJY38nQUUbGQzT3G07Waqi';
+  final String _apiKeyGemini = '';
 
   Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
@@ -367,7 +367,7 @@ class _ChatScreenCopilotState extends State<ChatScreenCopilot> {
   List<Map<String, String>> _messages = [];
   bool _isLoading = false;
 
-  final String _apiKeyCopilot = 'sk-proj-BIpNrxNk3JfCCwnGSEW9T3BlbkFJY38nQUUbGQzT3G07Waqi';
+  final String _apiKeyCopilot = '';
 
   Future<void> _sendMessage(String message) async {
     if (message.isEmpty) return;
